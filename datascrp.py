@@ -364,7 +364,9 @@ if __name__ == '__main__':
             rtarr_pr[:, 5] = (rtarr_pr[:, 1].astype(np.float) - rtarr_pr[:, 3].astype(np.float) - 0.00012 * (
                     rtarr_pr[:, 1].astype(np.float) + rtarr_pr[:, 3].astype(np.float))) / rtarr_pr[:, 3].astype(
                 np.float)
-            rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0] = rtarr_pr
+            # update the premium row in rtarr
+            rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0][:,5] = rtarr_pr[:,5]
+
 
             # get dc rate
 
@@ -373,13 +375,15 @@ if __name__ == '__main__':
                     rtarr_dc[:, 2].astype(np.float) + rtarr_dc[:, 4].astype(np.float)) - 0.001 * rtarr_dc[:,
                                                                                                  2].astype(
                 np.float)) / rtarr_dc[:, 2].astype(np.float)
-            rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0] = rtarr_dc
+            # update the discount rate in rtarr
+            rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0][:,6] = rtarr_dc[:,6]
+
 
             # get max rate
 
             rtarr[:,7] = rtarr[:,[5,6]].astype(np.float).max(axis = 1)
 
-            rtarr[rtarr[:, 7].astype(np.float) < 0.0] = 0.0
+            rtarr[rtarr[:, 7].astype(np.float) < 0.0][:,7] = 0.0
 
             daymax = rtarr[:, 7].astype(np.float).max()
 
