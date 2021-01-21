@@ -140,7 +140,15 @@ class DT:
                     adjstockArr[etfindex, :] = stockArr[stkindex, :]
                     adjstockArr[etfindex, ttindex] = adj_time
                     stkindex += 1
-                adjstockArr[etfindex, :] = stockArr[stkindex - 1, :]
+                if stkindex < stockArr.shape[0] and stockArr[stkindex, ttindex] > adjstockArr[etfindex, ttindex]:
+                    adj_time = adjstockArr[etfindex, ttindex]
+                    adjstockArr[etfindex, :] = stockArr[stkindex - 1, :]
+                    adjstockArr[etfindex, ttindex] = adj_time
+
+                if stkindex == stockArr.shape[0]:
+                    adj_time = adjstockArr[etfindex, ttindex]
+                    adjstockArr[etfindex, :] = stockArr[stkindex - 1, :]
+                    adjstockArr[etfindex, ttindex] = adj_time
                 etfindex += 1
 
             i_s10 = stockTAQ.columns.values.tolist().index('SellVolume10')
