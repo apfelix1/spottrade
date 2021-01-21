@@ -304,6 +304,7 @@ class DT:
             stockrev[:, 2] = stockrev[:, 2].astype(np.float) * stocktaq[:, -1].astype(np.float)
 
         iopvarr = np.concatenate((stockcost[:,0:3],stockrev[:,1:3]),axis = 1)
+
         return iopvarr
 
 
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     maxrate = []
     firstrate = []
 
-    tdPeriodList = TradingDays(startDate='20200102', endDate='20200102')
+    tdPeriodList = TradingDays(startDate='20200101', endDate='20200131')
     for i in tdPeriodList:
         print(i)
         dTypes = ['TAQ']
@@ -356,12 +357,12 @@ if __name__ == '__main__':
             # get iopv into rtarr
 
             rtarr[:, 3] = iopv[:, 1].astype(np.float) * iopv[:, 2].astype(np.float)
-            rtarr[:, 4] = iopv[:, 1].astype(np.float) * iopv[:, 2].astype(np.float)
+            rtarr[:, 4] = iopv[:, 3].astype(np.float) * iopv[:, 4].astype(np.float)
 
             # get pr rate
 
             rtarr_pr = rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0]
-            rtarr_pr[:, 5] = (rtarr_pr[:, 1].astype(np.float) - rtarr_pr[:, 3].astype(np.float) - 0.00012 * (
+            rtarr_pr[:,5] = (rtarr_pr[:, 1].astype(np.float) - rtarr_pr[:, 3].astype(np.float) - 0.00012 * (
                     rtarr_pr[:, 1].astype(np.float) + rtarr_pr[:, 3].astype(np.float))) / rtarr_pr[:, 3].astype(
                 np.float)
             # update the premium row in rtarr
@@ -376,7 +377,7 @@ if __name__ == '__main__':
                                                                                                  2].astype(
                 np.float)) / rtarr_dc[:, 2].astype(np.float)
             # update the discount rate in rtarr
-            rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0][:,6] = rtarr_dc[:,6]
+            rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0] = rtarr_dc
 
 
             # get max rate
