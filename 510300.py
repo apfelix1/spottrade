@@ -64,9 +64,9 @@ class DT:
         while i2 < data.shape[0]:
             if dtarr[i2, 0][0] == '6' or dtarr[i2, 0][0] == '9':
 
-                dtarr[i2, 0] = dtarr[i2, 0] + ".SH"
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SH"
             elif dtarr[i2, 0][0] == '3' or dtarr[i2, 0][0] == '0':
-                dtarr[i2, 0] = dtarr[i2, 0] + ".SZ"
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SZ"
             i2 += 1
         self.tradelist = dtarr
         self.cash_component = cp
@@ -236,11 +236,11 @@ class DT:
         stockcost = np.concatenate((np.row_stack(stockcost),np.row_stack(stockcost),np.row_stack(stockcost)),axis = 1)
         stockcost[:,1] = 0
         stockcost[:,2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[ 3]) == 4:
-            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5])
+        if float(tradelist[3].strip()) == 2 or float(tradelist[ 3].strip()) == 4:
+            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5].strip())
         else:
             stktaq = stkarr
-            quant = float((tradelist[2]))
+            quant = float((tradelist[2].strip()))
 
             # -4 current amt -3 total amt -2 stock cost -1 can trade or not
             stktaq = np.concatenate((stktaq, np.zeros((stktaq.shape[0], 4))), axis=1)
@@ -273,10 +273,10 @@ class DT:
         stockrev = np.concatenate((np.row_stack(stockrev), np.row_stack(stockrev), np.row_stack(stockrev)), axis=1)
         stockrev[:, 1] = 0
         stockrev[:, 2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[3]) == 4:
-            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5])
+        if float(tradelist[3].strip()) == 2 or float(tradelist[3].strip()) == 4:
+            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
         else:
-            quant = float((tradelist[2]))
+            quant = float(tradelist[2].strip())
             stocktaq = stkarr
 
             # return on the row at trade time

@@ -11,7 +11,7 @@ class DT:
     # set the dir of fund&security.
     secUtils = CSecurityMarketDataUtils('Z:/StockData')
 
-    etfNumber = '510050.SH'
+    etfNumber = '588000.SH'
     date = '20200102'
     tradelist = np.zeros((1, 1))
     cash_component = 0
@@ -60,7 +60,7 @@ class DT:
             dtarr = np.concatenate((dtarr, lst))
             index += 1
         dtarr = dtarr[:, 2:]
-        print(dtarr)
+
         # format the stock number with .SZ or .SH at the end
         i2 = 0
         while i2 < data.shape[0]:
@@ -117,7 +117,7 @@ class DT:
         dcetf = np.zeros((fundtaq.shape[0],1))
         fundtaq = np.concatenate((fundtaq,dcetf),axis = 1 )
         for index in range(fundtaq.shape[0]):
-            ttshare = 900000
+            ttshare = 2600000
             current_share = 0
             ttcost = 0
             i = 0
@@ -152,7 +152,7 @@ class DT:
         dcetf = np.zeros((fundtaq.shape[0], 1))
         fundtaq = np.concatenate((fundtaq, dcetf), axis=1)
         for index in range(fundtaq.shape[0]):
-            ttshare = 900000
+            ttshare = 2600000
             current_share = 0
             ttreturn = 0
             i = 0
@@ -238,8 +238,8 @@ class DT:
         stockcost = np.concatenate((np.row_stack(stockcost),np.row_stack(stockcost),np.row_stack(stockcost)),axis = 1)
         stockcost[:,1] = 0
         stockcost[:,2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[ 3]) == 4:
-            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5])
+        if float(tradelist[3].strip()) == 2 or float(tradelist[ 3].strip()) == 4:
+            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5].strip())
         else:
             stktaq = stkarr
             quant = float((tradelist[2].strip()))
@@ -275,8 +275,8 @@ class DT:
         stockrev = np.concatenate((np.row_stack(stockrev), np.row_stack(stockrev), np.row_stack(stockrev)), axis=1)
         stockrev[:, 1] = 0
         stockrev[:, 2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[3]) == 4:
-            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5])
+        if float(tradelist[3].strip()) == 2 or float(tradelist[3].strip()) == 4:
+            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
         else:
             quant = float((tradelist[2].strip()))
             stocktaq = stkarr
@@ -322,7 +322,7 @@ if __name__ == '__main__':
         print(i)
         dTypes = ['TAQ']
         i = i.replace("-", "")
-        a = DT('510300.SH', i)
+        a = DT('588000.SH', i)
         a.get_trade_list()
         a.get_etf_TAQ_array()
         a.get_premium_etf()
