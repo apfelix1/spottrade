@@ -231,29 +231,83 @@ class DT:
 
         self.rtarr[:, 1] = fundtaq[:, -1]
 
-    def get_premium_IOPV(self,tradelist, stockArray):
+    def get_IOPV(self,tradelist, rtarr):
 
+        stockNumber = tradelist[0]
 
-        stockcost = stockArray[:,0]
+        namearr = stockNumber + 'arr'
+        print(namearr)
+        stockTAQ = self.secUtils.StockTAQDataFrame(stockNumber, self.date)
+        stockArr = np.array(stockTAQ)
+        ttindex = stockTAQ.columns.values.tolist().index('TradingTime')
+
+        stockArr = stockArr[stockArr[:, ttindex] <= '14:57:00.000']
+        stockArr = stockArr[stockArr[:, ttindex] >= '09:30:00.000']
+
+        adjstockArr = np.zeros((rtarr.shape[0], ttindex))
+        adjstockArr = np.concatenate((adjstockArr, np.row_stack(rtarr[:, 0])), axis=1)
+        colnum = int(stockArr.shape[1] - adjstockArr.shape[1])
+        new0 = np.zeros((rtarr.shape[0], colnum))
+        adjstockArr = np.concatenate(
+            (adjstockArr, new0), axis=1)
+
+        stkindex = 0
+        etfindex = 0
+        # make the stkarr same size as etfarr
+        while etfindex < rtarr.shape[0]:
+            while stkindex < stockArr.shape[0] and stockArr[stkindex, ttindex] <= adjstockArr[etfindex, ttindex]:
+                adj_time = adjstockArr[etfindex, ttindex]
+                adjstockArr[etfindex, :] = stockArr[stkindex, :]
+                adjstockArr[etfindex, ttindex] = adj_time
+                stkindex += 1
+            if stkindex < stockArr.shape[0] and stockArr[stkindex, ttindex] > adjstockArr[etfindex, ttindex]:
+                adj_time = adjstockArr[etfindex, ttindex]
+                adjstockArr[etfindex, :] = stockArr[stkindex - 1, :]
+                adjstockArr[etfindex, ttindex] = adj_time
+
+            if stkindex == stockArr.shape[0]:
+                adj_time = adjstockArr[etfindex, ttindex]
+                adjstockArr[etfindex, :] = stockArr[stkindex - 1, :]
+                adjstockArr[etfindex, ttindex] = adj_time
+            etfindex += 1
+
+        i_s10 = stockTAQ.columns.values.tolist().index('SellVolume10')
+        i_s1 = stockTAQ.columns.values.tolist().index('SellVolume01')
+        i_sp10 = stockTAQ.columns.values.tolist().index('SellPrice10')
+        i_sp1 = stockTAQ.columns.values.tolist().index('SellPrice01')
+
+        i_b10 = stockTAQ.columns.values.tolist().index('BuyVolume10')
+        i_b1 = stockTAQ.columns.values.tolist().index('BuyVolume01')
+        i_bp10 = stockTAQ.columns.values.tolist().index('BuyPrice10')
+        i_bp1 = stockTAQ.columns.values.tolist().index('BuyPrice01')
+        stkarr = np.concatenate((np.row_stack(rtarr[:, 0]), adjstockArr[:, i_s10:i_s1 + 1]), axis=1)
+        stkarr = np.concatenate((stkarr, adjstockArr[:, i_sp10:i_sp1 + 1]), axis=1)
+        stkarr = np.concatenate((stkarr, adjstockArr[:, i_b1:i_b10 + 1]), axis=1)
+        stkarr = np.concatenate((stkarr, adjstockArr[:, i_bp1:i_bp10 + 1]), axis=1)
+
+        # end of get stock array
+
+        # get pr iopv
+        stockcost = stkarr[:,0]
         stockcost = np.concatenate((np.row_stack(stockcost),np.row_stack(stockcost),np.row_stack(stockcost)),axis = 1)
         stockcost[:,1] = 0
         stockcost[:,2] = 1
         if float(tradelist[3]) == 2 or float(tradelist[ 3]) == 4:
             stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5])
         else:
+            stktaq = stkarr
             quant = float((tradelist[2]))
-            stocktaq = stockArray
 
             # -4 current amt -3 total amt -2 stock cost -1 can trade or not
-            stocktaq = np.concatenate((stocktaq, np.zeros((stocktaq.shape[0], 4))), axis=1)
+            stktaq = np.concatenate((stktaq, np.zeros((stktaq.shape[0], 4))), axis=1)
 
-            stocktaq[:, -3] = stocktaq[:, 1:11].astype(np.float).sum(axis=1)
+            stktaq[:, -3] = stktaq[:, 1:11].astype(np.float).sum(axis=1)
             # change the index to 0 if cant trade
-            cant_trade = stocktaq[stocktaq[:, -3].astype(np.float) < quant]
+            cant_trade = stktaq[stktaq[:, -3].astype(np.float) < quant]
             cant_trade[:, -1] = 0
-            stocktaq[stocktaq[:, -3].astype(np.float) < quant] = cant_trade
+            stktaq[stktaq[:, -3].astype(np.float) < quant] = cant_trade
             # find the time tick that can trade
-            can_trade = stocktaq[stocktaq[:, -3].astype(np.float) >= quant]
+            can_trade = stktaq[stktaq[:, -3].astype(np.float) >= quant]
             can_trade[:, -1] = 1
             index = 0
             while index < 10:
@@ -265,10 +319,48 @@ class DT:
                 can_trade[:, -2] = can_trade[:, -2].astype(np.float) + can_trade[:, 20 - index].astype(
                     np.float) * minrow
                 index += 1
+            stkarr[stkarr[:, -3].astype(np.float) >= quant] = can_trade
+            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + stktaq[:, -2].astype(np.float)
+            stockcost[:, 2] = stockcost[:, 2].astype(np.float) * stktaq[:, -1].astype(np.float)
+
+        # get dc iopv
+
+        stockrev = stkarr[:, 0]
+        stockrev = np.concatenate((np.row_stack(stockrev), np.row_stack(stockrev), np.row_stack(stockrev)), axis=1)
+        stockrev[:, 1] = 0
+        stockrev[:, 2] = 1
+        if float(tradelist[3]) == 2 or float(tradelist[3]) == 4:
+            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5])
+        else:
+            quant = float((tradelist[2]))
+            stocktaq = stkarr
+
+            # return on the row at trade time
+            stocktaq = np.concatenate((stocktaq, np.zeros((stocktaq.shape[0], 4))), axis=1)
+
+            stocktaq[:, -3] = stocktaq[:, 21:31].astype(np.float).sum(axis=1)
+            cant_trade = stocktaq[stocktaq[:, -3].astype(np.float) < quant]
+            cant_trade[:, -1] = 0
+            stocktaq[stocktaq[:, -3].astype(np.float) < quant] = cant_trade
+            can_trade = stocktaq[stocktaq[:, -3].astype(np.float) >= quant]
+            can_trade[:, -1] = 1
+            index = 0
+            while index < 10:
+                col1 = can_trade[:, 21 + index]
+                col2 = -can_trade[:, -4].astype(np.float) + quant
+                minrow = np.array([col1, col2]).transpose()
+                minrow = minrow.astype(np.float).min(axis=1)
+                can_trade[:, -4] = can_trade[:, -4].astype(np.float) + minrow
+                can_trade[:, -2] = can_trade[:, -2].astype(np.float) + can_trade[:, 31 + index].astype(
+                    np.float) * minrow
+                index += 1
+
             stocktaq[stocktaq[:, -3].astype(np.float) >= quant] = can_trade
-            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + stocktaq[:, -2].astype(np.float)
-            stockcost[:, 2] = stockcost[:, 2].astype(np.float) * stocktaq[:, -1].astype(np.float)
-        return stockcost
+            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + stocktaq[:, -2].astype(np.float)
+            stockrev[:, 2] = stockrev[:, 2].astype(np.float) * stocktaq[:, -1].astype(np.float)
+
+        iopvarr = np.concatenate((stockcost[:,0:3],stockrev[:,1:3]),axis = 1)
+        return iopvarr
 
     def get_discount_IOPV(self,tradelist, stockArray):
 
@@ -324,17 +416,36 @@ if __name__ == '__main__':
         a.get_etf_TAQ_array()
         a.get_premium_etf()
         a.get_discount_etf()
-        rtarr = a.rtarr
+
 
         if __name__ == '__main__':
+
+            rtarr = a.rtarr
 
             tradelist = a.tradelist
 
             pool = mp.Pool(mp.cpu_count())
-            stklist = pool.starmap(a.get_stock_TAQ_array, [(td,rtarr) for td in tradelist[:,0]])
+            # stklist = pool.starmap(a.get_stock_TAQ_array, [(td,rtarr) for td in tradelist[:,0]])
+            # print("stkfinish")
 
-            pr_iopv = a.get_premium_IOPV(tradelist[0],stklist[0])
-            dc_iopv = a.get_discount_IOPV(tradelist[0], stklist[0])
+            iopv_list = pool.starmap(a.get_IOPV, [(td, rtarr) for td in tradelist])
+            print('finish')
+
+            iopv = iopv_list[0]
+            index = 1
+            while index < tradelist.shape[0]:
+
+                iopv[:, 1] = iopv[:, 1].astype(np.float) + iopv_list[index][:,1].astype(np.float)
+                iopv[:, 2] = iopv[:, 2].astype(np.float) * iopv_list[index][:,2].astype(np.float)
+
+                index += 1
+            iopv[:, 1] = iopv[:, 1].astype(np.float) + a.cash_component
+            del iopv_list
+
+
+
+            # dc_iopv_list = pool.map(a.get_discount_IOPV,[(td,arr) for td in tradelist for arr in stklist])
+            '''
             pr_iopv[:,1] = pr_iopv[:,1].astype(np.float) + a.cash_component
             dc_iopv[:, 1] = dc_iopv[:, 1].astype(np.float) + a.cash_component
             index = 1
@@ -349,6 +460,7 @@ if __name__ == '__main__':
                 dc_iopv[:, 1] = dc_iopv[:, 1].astype(np.float) + new_dc_iopv[:, 1].astype(np.float)
                 dc_iopv[:, 2] = dc_iopv[:, 2].astype(np.float) * new_dc_iopv[:, 2].astype(np.float)
                 index+= 1
+                
 
             #get pr_iopv
 
@@ -386,6 +498,7 @@ if __name__ == '__main__':
 
             maxrate.append(daymax)
             firstrate.append(dayfirst)
+            '''
 
 
             # pr_iopv = pool.starmap(a.get_premium_IOPV, [(td, stk) for td in tradelist for stk in stklist])
