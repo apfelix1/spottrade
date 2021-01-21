@@ -33,21 +33,22 @@ class DT:
         date = self.date
         etfNumber = self.etfNumber
 
-        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '510300' + date + '.TXT', dtype=str,delimiter= 'no way u can delim')
+        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + 'fm288etfd' + date + '001.txt', dtype=str,
+                             delimiter='no way u can delim')
 
         i = 0
         data = np.row_stack(data)
         del_list = []
 
+        cp = float(str(data[1]).split('|')[18])
+
         while i < data.shape[0]:
-            if data[i, 0][0] != '6' and data[i, 0][0] != '9' and data[i, 0][0] != '0' and data[i, 0][0] != '3':
+            if data[i, 0][1] != ' ':
                 del_list.append(i)
-            # get the row index of cash component
-            if data[i, 0][0:22] =='EstimateCashComponent=':
-                cpindex = i
+
             i += 1
-        cp = float(str(data[cpindex,0]).replace('EstimateCashComponent=', ''))
-        # get the array of 300etf before formatting, which contains only 1 row with all the information inside.
+
+            # get the array of 300etf before formatting, which contains only 1 row with all the information inside.
         data = np.delete(data, del_list, axis=0)
 
         # get the array of trade list by loops
@@ -58,15 +59,16 @@ class DT:
             lst = np.array([lst[0].split('|')])
             dtarr = np.concatenate((dtarr, lst))
             index += 1
-
+        dtarr = dtarr[:, 2:]
+        print(dtarr)
         # format the stock number with .SZ or .SH at the end
         i2 = 0
         while i2 < data.shape[0]:
             if dtarr[i2, 0][0] == '6' or dtarr[i2, 0][0] == '9':
 
-                dtarr[i2, 0] = dtarr[i2, 0] + ".SH"
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SH"
             elif dtarr[i2, 0][0] == '3' or dtarr[i2, 0][0] == '0':
-                dtarr[i2, 0] = dtarr[i2, 0] + ".SZ"
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SZ"
             i2 += 1
         self.tradelist = dtarr
         self.cash_component = cp
@@ -240,7 +242,7 @@ class DT:
             stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5])
         else:
             stktaq = stkarr
-            quant = float((tradelist[2]))
+            quant = float((tradelist[2].strip()))
 
             # -4 current amt -3 total amt -2 stock cost -1 can trade or not
             stktaq = np.concatenate((stktaq, np.zeros((stktaq.shape[0], 4))), axis=1)
@@ -276,7 +278,7 @@ class DT:
         if float(tradelist[3]) == 2 or float(tradelist[3]) == 4:
             stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5])
         else:
-            quant = float((tradelist[2]))
+            quant = float((tradelist[2].strip()))
             stocktaq = stkarr
 
             # return on the row at trade time
@@ -315,7 +317,7 @@ if __name__ == '__main__':
     maxrate = []
     firstrate = []
 
-    tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
+    tdPeriodList = TradingDays(startDate='20201116', endDate='20210120')
     for i in tdPeriodList:
         print(i)
         dTypes = ['TAQ']
