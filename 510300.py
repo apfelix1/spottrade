@@ -315,7 +315,7 @@ if __name__ == '__main__':
     maxrate = []
     firstrate = []
 
-    tdPeriodList = TradingDays(startDate='20200101', endDate='20200131')
+    tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
     for i in tdPeriodList:
         print(i)
         dTypes = ['TAQ']
