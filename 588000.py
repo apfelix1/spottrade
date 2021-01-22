@@ -152,7 +152,11 @@ class DT:
         dcetf = np.zeros((fundtaq.shape[0], 1))
         fundtaq = np.concatenate((fundtaq, dcetf), axis=1)
         for index in range(fundtaq.shape[0]):
-            ttshare = 2600000
+            if self.date < '20201209':
+                ttshare = 1600000
+            else:
+                ttshare = 2600000
+
             current_share = 0
             ttreturn = 0
             i = 0
@@ -419,7 +423,7 @@ if __name__ == '__main__':
                 columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
                          7: 'rate',
                          8: 'dummy'})
-            rtarr_df.to_csv('.\etfresult\\588090\\'+i+'.csv', index=False)
+            rtarr_df.to_csv('.\etfresult\\588000\\'+i+'.csv', index=False)
 
 
 
@@ -428,7 +432,7 @@ if __name__ == '__main__':
     datadf = pd.DataFrame(data)
     datadf = datadf.rename(
         columns={0: 'date', 1: 'first rate', 2: 'timetick', 3: 'daymax', 4: 'daymean', 5: 'daysignal'})
-    datadf.to_csv(r'.\etfresult\588090.csv', index=False)
+    datadf.to_csv(r'.\etfresult\588000.csv', index=False)
 
 
 
