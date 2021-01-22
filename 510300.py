@@ -237,7 +237,11 @@ class DT:
         stockcost[:,1] = 0
         stockcost[:,2] = 1
         if float(tradelist[3].strip()) == 2 or float(tradelist[ 3].strip()) == 4:
-            stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[ 5].strip())
+            if tradelist[ 5].strip() =='':
+                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[6].strip())
+            else:
+                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[5].strip())
+
         else:
             stktaq = stkarr
             quant = float((tradelist[2].strip()))
@@ -274,7 +278,12 @@ class DT:
         stockrev[:, 1] = 0
         stockrev[:, 2] = 1
         if float(tradelist[3].strip()) == 2 or float(tradelist[3].strip()) == 4:
-            stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
+            if tradelist[5].strip() =='':
+                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[6].strip())
+            else:
+                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
+
+
         else:
             quant = float(tradelist[2].strip())
             stocktaq = stkarr

@@ -316,6 +316,9 @@ class DT:
 if __name__ == '__main__':
     maxrate = []
     firstrate = []
+    frtime = []
+    meanrate = []
+    signumber = []
 
     tdPeriodList = TradingDays(startDate='20201116', endDate='20210120')
     for i in tdPeriodList:
@@ -368,7 +371,7 @@ if __name__ == '__main__':
                     rtarr_pr[:, 1].astype(np.float) + rtarr_pr[:, 3].astype(np.float))) / rtarr_pr[:, 3].astype(
                 np.float)
             # update the premium row in rtarr
-            rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0][:,5] = rtarr_pr[:,5]
+            rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0] = rtarr_pr
 
 
             # get dc rate
@@ -390,13 +393,44 @@ if __name__ == '__main__':
 
             daymax = rtarr[:, 7].astype(np.float).max()
 
+            daysig = rtarr[rtarr[:, 7].astype(np.float) > 0].shape[0]
+            if daysig == 0:
+                daymean = 0.0
+            else:
+                daymean = rtarr[rtarr[:, 7].astype(np.float) > 0][:, 7].astype(np.float).mean()
+
             if rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7].shape[0] == 0:
                 dayfirst = 0.0
+                frtimetick = '0.0'
             else:
                 dayfirst = rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7][0]
+                frtimetick = rtarr[rtarr[:, 7] == dayfirst][0][0]
+
+            rtarr[rtarr[:, 7].astype(np.float) > 0][:, 8] = 1
 
             maxrate.append(daymax)
             firstrate.append(dayfirst)
+            frtime.append(frtimetick)
+            meanrate.append(daymean)
+            signumber.append(daysig)
+
+            rtarr_df = pd.DataFrame(rtarr)
+            rtarr_df = rtarr_df.rename(
+                columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
+                         7: 'rate',
+                         8: 'dummy'})
+            rtarr_df.to_csv('.\etfresult\\588090\\'+i+'.csv', index=False)
+
+
+
+    data = np.array([tdPeriodList, firstrate, frtime, maxrate, meanrate, signumber], dtype='str')
+    data = data.transpose()
+    datadf = pd.DataFrame(data)
+    datadf = datadf.rename(
+        columns={0: 'date', 1: 'first rate', 2: 'timetick', 3: 'daymax', 4: 'daymean', 5: 'daysignal'})
+    datadf.to_csv(r'.\etfresult\588090.csv', index=False)
+
+
 
 
 

@@ -4,11 +4,11 @@ from higgsboom.FuncUtils.DateTime import *
 
 
 
-tdPeriodList = TradingDays(startDate='20201116', endDate='20210120')
+tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
 list = []
 for i in tdPeriodList:
     i = i.replace('-','')
-    element = 'https://www.huatai-pb.com/etf-web/etf/download?filePath=588090'+i+'.TXT'
+    element = 'https://www.huatai-pb.com/etf-web/etf/download?filePath=515580'+i+'.TXT'
     list.append(element)
 listarr = np.array(list)
 listarr = np.row_stack(listarr)
