@@ -8,7 +8,7 @@ tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
 list = []
 for i in tdPeriodList:
     i = i.replace('-','')
-    element = 'https://www.huatai-pb.com/etf-web/etf/download?filePath=515580'+i+'.TXT'
+    element = 'https://www.huatai-pb.com/etf-web/etf/download?filePath=510220'+i+'.TXT'
     list.append(element)
 listarr = np.array(list)
 listarr = np.row_stack(listarr)
