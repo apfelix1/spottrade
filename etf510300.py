@@ -11,7 +11,7 @@ class DT:
     # set the dir of fund&security.
     secUtils = CSecurityMarketDataUtils('Z:/StockData')
 
-    etfNumber = '515580.SH'
+    etfNumber = '510050.SH'
     date = '20200102'
     tradelist = np.zeros((1, 1))
     cash_component = 0
@@ -33,7 +33,7 @@ class DT:
         date = self.date
         etfNumber = self.etfNumber
 
-        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '515580' + date + '.TXT', dtype=str,delimiter= 'no way u can delim')
+        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '510300' + date + '.TXT', dtype=str,delimiter= 'no way u can delim')
 
         i = 0
         data = np.row_stack(data)
@@ -115,11 +115,7 @@ class DT:
         dcetf = np.zeros((fundtaq.shape[0],1))
         fundtaq = np.concatenate((fundtaq,dcetf),axis = 1 )
         for index in range(fundtaq.shape[0]):
-            if self.date < '20201211':
-                ttshare = 1800000
-            else:
-                ttshare = 2600000
-
+            ttshare = 900000
             current_share = 0
             ttcost = 0
             i = 0
@@ -154,10 +150,7 @@ class DT:
         dcetf = np.zeros((fundtaq.shape[0], 1))
         fundtaq = np.concatenate((fundtaq, dcetf), axis=1)
         for index in range(fundtaq.shape[0]):
-            if self.date < '20201211':
-                ttshare = 1800000
-            else:
-                ttshare = 2600000
+            ttshare = 900000
             current_share = 0
             ttreturn = 0
             i = 0
@@ -184,7 +177,7 @@ class DT:
 
     def get_IOPV(self,tradelist, rtarr):
 
-        stockNumber = tradelist[0].strip()
+        stockNumber = tradelist[0]
 
         namearr = stockNumber + 'arr'
         print(namearr)
@@ -243,11 +236,12 @@ class DT:
         stockcost = np.concatenate((np.row_stack(stockcost),np.row_stack(stockcost),np.row_stack(stockcost)),axis = 1)
         stockcost[:,1] = 0
         stockcost[:,2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[ 3]) == 4:
+        if float(tradelist[3].strip()) == 2 or float(tradelist[ 3].strip()) == 4:
             if tradelist[ 5].strip() =='':
                 stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[6].strip())
             else:
                 stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[5].strip())
+
         else:
             stktaq = stkarr
             quant = float((tradelist[2].strip()))
@@ -283,14 +277,15 @@ class DT:
         stockrev = np.concatenate((np.row_stack(stockrev), np.row_stack(stockrev), np.row_stack(stockrev)), axis=1)
         stockrev[:, 1] = 0
         stockrev[:, 2] = 1
-        if float(tradelist[3]) == 2 or float(tradelist[3]) == 4:
+        if float(tradelist[3].strip()) == 2 or float(tradelist[3].strip()) == 4:
             if tradelist[5].strip() =='':
                 stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[6].strip())
             else:
                 stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
 
+
         else:
-            quant = float((tradelist[2]))
+            quant = float(tradelist[2].strip())
             stocktaq = stkarr
 
             # return on the row at trade time
@@ -321,128 +316,87 @@ class DT:
 
         return iopvarr
 
+def run():
+    if __name__ == '__main__':
+        maxrate = []
+        firstrate = []
 
+        tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
+        for i in tdPeriodList:
+            print(i)
+            dTypes = ['TAQ']
+            i = i.replace("-", "")
+            a = DT('510300.SH', i)
+            a.get_trade_list()
+            a.get_etf_TAQ_array()
+            a.get_premium_etf()
+            a.get_discount_etf()
 
+            if __name__ == '__main__':
 
+                rtarr = a.rtarr
 
-if __name__ == '__main__':
-    maxrate = []
-    firstrate = []
-    frtime = []
-    meanrate = []
-    signumber = []
+                tradelist = a.tradelist
 
-    tdPeriodList = TradingDays(startDate='20201116', endDate='20210120')
-    for i in tdPeriodList:
-        print(i)
-        dTypes = ['TAQ']
-        i = i.replace("-", "")
-        a = DT('515580.SH', i)
-        a.get_trade_list()
-        a.get_etf_TAQ_array()
-        a.get_premium_etf()
-        a.get_discount_etf()
+                pool = mp.Pool(mp.cpu_count())
+                # stklist = pool.starmap(a.get_stock_TAQ_array, [(td,rtarr) for td in tradelist[:,0]])
+                # print("stkfinish")
 
+                iopv_list = pool.starmap(a.get_IOPV, [(td, rtarr) for td in tradelist])
+                print('finish')
 
-        if __name__ == '__main__':
+                iopv = iopv_list[0]
+                index = 1
+                while index < tradelist.shape[0]:
+                    iopv[:, 1] = iopv[:, 1].astype(np.float) + iopv_list[index][:, 1].astype(np.float)
+                    iopv[:, 2] = iopv[:, 2].astype(np.float) * iopv_list[index][:, 2].astype(np.float)
+                    iopv[:, 3] = iopv[:, 3].astype(np.float) + iopv_list[index][:, 3].astype(np.float)
+                    iopv[:, 4] = iopv[:, 4].astype(np.float) * iopv_list[index][:, 4].astype(np.float)
 
-            rtarr = a.rtarr
+                    index += 1
+                iopv[:, 1] = iopv[:, 1].astype(np.float) + a.cash_component
+                iopv[:, 3] = iopv[:, 3].astype(np.float) + a.cash_component
+                del iopv_list
 
-            tradelist = a.tradelist
+                # get iopv into rtarr
 
-            pool = mp.Pool(mp.cpu_count())
-            # stklist = pool.starmap(a.get_stock_TAQ_array, [(td,rtarr) for td in tradelist[:,0]])
-            # print("stkfinish")
+                rtarr[:, 3] = iopv[:, 1].astype(np.float) * iopv[:, 2].astype(np.float)
+                rtarr[:, 4] = iopv[:, 3].astype(np.float) * iopv[:, 4].astype(np.float)
 
-            iopv_list = pool.starmap(a.get_IOPV, [(td, rtarr) for td in tradelist])
-            print('finish')
+                # get pr rate
 
-            iopv = iopv_list[0]
-            index = 1
-            while index < tradelist.shape[0]:
+                rtarr_pr = rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0]
+                rtarr_pr[:, 5] = (rtarr_pr[:, 1].astype(np.float) - rtarr_pr[:, 3].astype(np.float) - 0.00012 * (
+                        rtarr_pr[:, 1].astype(np.float) + rtarr_pr[:, 3].astype(np.float))) / rtarr_pr[:, 3].astype(
+                    np.float)
+                # update the premium row in rtarr
+                rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0][:, 5] = rtarr_pr[:, 5]
 
-                iopv[:, 1] = iopv[:, 1].astype(np.float) + iopv_list[index][:,1].astype(np.float)
-                iopv[:, 2] = iopv[:, 2].astype(np.float) * iopv_list[index][:,2].astype(np.float)
-                iopv[:, 3] = iopv[:, 3].astype(np.float) + iopv_list[index][:, 3].astype(np.float)
-                iopv[:, 4] = iopv[:, 4].astype(np.float) * iopv_list[index][:, 4].astype(np.float)
+                # get dc rate
 
-                index += 1
-            iopv[:, 1] = iopv[:, 1].astype(np.float) + a.cash_component
-            iopv[:, 3] = iopv[:, 3].astype(np.float) + a.cash_component
-            del iopv_list
+                rtarr_dc = rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0]
+                rtarr_dc[:, 6] = (rtarr_dc[:, 4].astype(np.float) - rtarr_dc[:, 2].astype(np.float) - 0.00012 * (
+                        rtarr_dc[:, 2].astype(np.float) + rtarr_dc[:, 4].astype(np.float)) - 0.001 * rtarr_dc[:,
+                                                                                                     2].astype(
+                    np.float)) / rtarr_dc[:, 2].astype(np.float)
+                # update the discount rate in rtarr
+                rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0] = rtarr_dc
 
-            # get iopv into rtarr
+                # get max rate
 
-            rtarr[:, 3] = iopv[:, 1].astype(np.float) * iopv[:, 2].astype(np.float)
-            rtarr[:, 4] = iopv[:, 3].astype(np.float) * iopv[:, 4].astype(np.float)
+                rtarr[:, 7] = rtarr[:, [5, 6]].astype(np.float).max(axis=1)
 
-            # get pr rate
+                rtarr[rtarr[:, 7].astype(np.float) < 0.0][:, 7] = 0.0
 
-            rtarr_pr = rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0]
-            rtarr_pr[:,5] = (rtarr_pr[:, 1].astype(np.float) - rtarr_pr[:, 3].astype(np.float) - 0.00012 * (
-                    rtarr_pr[:, 1].astype(np.float) + rtarr_pr[:, 3].astype(np.float))) / rtarr_pr[:, 3].astype(
-                np.float)
-            # update the premium row in rtarr
-            rtarr[rtarr[:, 1].astype(np.float) * rtarr[:, 3].astype(np.float) > 0] = rtarr_pr
+                daymax = rtarr[:, 7].astype(np.float).max()
 
+                if rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7].shape[0] == 0:
+                    dayfirst = 0.0
+                else:
+                    dayfirst = rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7][0]
 
-            # get dc rate
-
-            rtarr_dc = rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0]
-            rtarr_dc[:, 6] = (rtarr_dc[:, 4].astype(np.float) - rtarr_dc[:, 2].astype(np.float) - 0.00012 * (
-                    rtarr_dc[:, 2].astype(np.float) + rtarr_dc[:, 4].astype(np.float)) - 0.001 * rtarr_dc[:,
-                                                                                                 2].astype(
-                np.float)) / rtarr_dc[:, 2].astype(np.float)
-            # update the discount rate in rtarr
-            rtarr[rtarr[:, 2].astype(np.float) * rtarr[:, 4].astype(np.float) > 0] = rtarr_dc
-
-
-            # get max rate
-
-            rtarr[:,7] = rtarr[:,[5,6]].astype(np.float).max(axis = 1)
-
-            rtarr[rtarr[:, 7].astype(np.float) < 0.0][:,7] = 0.0
-
-            daymax = rtarr[:, 7].astype(np.float).max()
-            daysig = rtarr[rtarr[:, 7].astype(np.float) > 0].shape[0]
-            if daysig == 0:
-                daymean = 0.0
-            else:
-                daymean = rtarr[rtarr[:, 7].astype(np.float) > 0][:,7].astype(np.float).mean()
-
-
-
-            if rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7].shape[0] == 0:
-                dayfirst = 0.0
-                frtimetick = '0.0'
-            else:
-                dayfirst = rtarr[rtarr[:, 7].astype(np.float) > 0.0][:, 7][0]
-                frtimetick = rtarr[rtarr[:, 7] == dayfirst][0][0]
-
-            rtarr[rtarr[:,7].astype(np.float)>0][:,8] = 1
-
-
-            maxrate.append(daymax)
-            firstrate.append(dayfirst)
-            frtime.append(frtimetick)
-            meanrate.append(daymean)
-            signumber.append(daysig)
-
-            rtarr_df = pd.DataFrame(rtarr)
-            rtarr_df = rtarr_df.rename(
-                columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
-                         7: 'rate', 8: 'dummy'})
-            rtarr_df.to_csv('.\etfresult\\515580\\' +i+ '.csv', index=False)
-
-
-
-    data = np.array([tdPeriodList,firstrate,frtime,maxrate,meanrate,signumber],dtype = 'str')
-    data = data.transpose()
-    datadf = pd.DataFrame(data)
-    datadf = datadf.rename(columns ={0 : 'date', 1:'first rate', 2:'timetick', 3:'daymax',4:'daymean',5:'daysignal'})
-    datadf.to_csv(r'.\etfresult\515580.csv', index = False)
-
-
+                maxrate.append(daymax)
+                firstrate.append(dayfirst)
 
             # pr_iopv = pool.starmap(a.get_premium_IOPV, [(td, stk) for td in tradelist for stk in stklist])
 
