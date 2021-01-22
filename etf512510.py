@@ -11,7 +11,7 @@ class DT:
     # set the dir of fund&security.
     secUtils = CSecurityMarketDataUtils('Z:/StockData')
 
-    etfNumber = '510220.SH'
+    etfNumber = '512510.SH'
     date = '20200102'
     tradelist = np.zeros((1, 1))
     cash_component = 0
@@ -33,7 +33,7 @@ class DT:
         date = self.date
         etfNumber = self.etfNumber
 
-        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '510220' + date + '.TXT', dtype=str,
+        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '512510' + date + '.TXT', dtype=str,
                              delimiter='no way u can delim')
 
         i = 0
@@ -330,7 +330,7 @@ if __name__ == '__main__':
         print(i)
         dTypes = ['TAQ']
         i = i.replace("-", "")
-        a = DT('510220.SH', i)
+        a = DT('512510.SH', i)
         a.get_trade_list()
         a.get_etf_TAQ_array()
         a.get_premium_etf()
@@ -418,14 +418,14 @@ if __name__ == '__main__':
             rtarr_df = rtarr_df.rename(
                 columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
                          7: 'rate', 8: 'dummy'})
-            rtarr_df.to_csv('.\etfresult\\510220\\' + i + '.csv', index=False)
+            rtarr_df.to_csv('.\etfresult\\512510\\' + i + '.csv', index=False)
 
     data = np.array([tdPeriodList, firstrate, frtime, maxrate, meanrate, signumber], dtype='str')
     data = data.transpose()
     datadf = pd.DataFrame(data)
     datadf = datadf.rename(
         columns={0: 'date', 1: 'first rate', 2: 'timetick', 3: 'daymax', 4: 'daymean', 5: 'daysignal'})
-    datadf.to_csv(r'.\etfresult\510220.csv', index=False)
+    datadf.to_csv(r'.\etfresult\512510.csv', index=False)
 
     # pr_iopv = pool.starmap(a.get_premium_IOPV, [(td, stk) for td in tradelist for stk in stklist])
 
