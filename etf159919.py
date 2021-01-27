@@ -11,7 +11,7 @@ class DT:
     # set the dir of fund&security.
     secUtils = CSecurityMarketDataUtils('Z:/StockData')
 
-    etfNumber = '159901.SZ'
+    etfNumber = '159919.SZ'
     date = '20200102'
     tradelist = np.zeros((1, 1))
     cash_component = 0
@@ -42,7 +42,9 @@ class DT:
 
         while i < data.shape[0]:
             data[i,0] = str(data[i,0]).strip()
-            if data[i, 0][0] != '6' and data[i, 0][0] != '9' and data[i, 0][0] != '0' and data[i, 0][0] != '3':
+            if data[i, 0][0] != '6' and data[i, 0][0] != '9' and data[i, 0][0] != '0' and data[i, 0][0] != '3' :
+                del_list.append(i)
+            if len(data[i,0]) <20:
                 del_list.append(i)
             # get the row index of cash component
             if data[i,0][0:7] == '预估现金差额：':
@@ -65,7 +67,6 @@ class DT:
         lst1 = data[0, :][0].split(' ')
         lst1 = list(filter(None,lst1))
         dtarr = np.array([lst1])
-        print(dtarr)
         while index < data.shape[0]:
             lst = data[index, :][0].split(' ')
             lst = list(filter(None,lst))
@@ -78,9 +79,8 @@ class DT:
                     lstidx1 += 1
                 lst.insert(1, stkname)
             lst = np.array([lst])
-            dtarr = np.concatenate((dtarr, lst),axis = 0)
+            dtarr = np.concatenate((dtarr, lst))
             index += 1
-
 
         self.tradelist = dtarr
         self.cash_component = cp
@@ -145,7 +145,7 @@ class DT:
             sum_vol = fundtaq[index, i_s10:i_s1 + 1].sum()
             # check if there is enough shares to trade
             if ttshare > sum_vol:
-                print('cant buy' + self.etfNumber )
+
                 fundtaq[index, -1] = 0
             else:
                 while i < 10:
@@ -179,7 +179,7 @@ class DT:
             sum_vol = fundtaq[index, i_b1:i_b10 + 1].sum()
             # check if there is enough shares to trade
             if ttshare > sum_vol:
-                print('cant sell' + self.etfNumber)
+                # print('cant sell' + self.etfNumber)
                 fundtaq[index, -1] = 0
             else:
                 while i < 10:
@@ -199,19 +199,17 @@ class DT:
     def get_IOPV(self,tradelist, rtarr):
 
         stockNumber = tradelist[0]
-        print(stockNumber)
 
         # format the stock number with .SZ or .SH at the end
         if str(stockNumber[0]) == '6' or str(stockNumber[0]) == '9':
             stockNumber = stockNumber + ".SH"
 
         elif str(stockNumber[0]) == '3' or str(stockNumber[0]) == '0':
-            stockNumber = stockNumber +'.SZ'
-
-
+            stockNumber = stockNumber + '.SZ'
 
         stockTAQ = self.secUtils.StockTAQDataFrame(stockNumber, self.date)
         stockArr = np.array(stockTAQ)
+
 
         ttindex = stockTAQ.columns.values.tolist().index('TradingTime')
 
@@ -351,12 +349,12 @@ if __name__ == '__main__':
     meanrate = []
     signumber = []
 
-    tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
+    tdPeriodList = TradingDays(startDate='20200615', endDate='20201231')
     for i in tdPeriodList:
         print(i)
         dTypes = ['TAQ']
         i = i.replace("-", "")
-        a = DT('159901.SZ', i)
+        a = DT('159919.SZ', i)
         a.get_trade_list()
         a.get_etf_TAQ_array()
         a.get_premium_etf()
@@ -451,7 +449,7 @@ if __name__ == '__main__':
             rtarr_df = rtarr_df.rename(
                 columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
                          7: 'rate', 8: 'dummy'})
-            rtarr_df.to_csv('.\etfresult\\159901\\' +i+ '.csv', index=False)
+            rtarr_df.to_csv('.\etfresult\\159919\\' +i+ '.csv', index=False)
 
 
 
@@ -459,5 +457,5 @@ if __name__ == '__main__':
     data = data.transpose()
     datadf = pd.DataFrame(data)
     datadf = datadf.rename(columns ={0 : 'date', 1:'first rate', 2:'timetick', 3:'daymax',4:'daymean',5:'daysignal'})
-    datadf.to_csv(r'.\etfresult\159901.csv', index = False)
+    datadf.to_csv(r'.\etfresult\159919.csv', index = False)
 

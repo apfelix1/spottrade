@@ -20,7 +20,7 @@ def storageToLocalFiles(storagePath, data):
     fhandle.write(data)
     fhandle.close()
 
-tdPeriodList = TradingDays(startDate='20201231', endDate='20201231')
+tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
 
 for i in tdPeriodList:
     print(i)
@@ -32,6 +32,6 @@ for i in tdPeriodList:
     data = read_pageHtml(url)
     storagePath = ".\\tradelist\\159901\\"+'159901'+i+".txt"
     storageToLocalFiles(storagePath, data)
-    time.sleep(2)
+    time.sleep(1)
 
 
