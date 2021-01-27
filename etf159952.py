@@ -11,7 +11,7 @@ class DT:
     # set the dir of fund&security.
     secUtils = CSecurityMarketDataUtils('Z:/StockData')
 
-    etfNumber = '510050.SH'
+    etfNumber = '159952.SZ'
     date = '20200102'
     tradelist = np.zeros((1, 1))
     cash_component = 0
@@ -33,92 +33,57 @@ class DT:
     def get_trade_list(self):
         date = self.date
         etfNumber = self.etfNumber
-        if self.date < '20200317':
-            data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + '50__' + date[-4:] + '.ETF', dtype=str,
-                                 delimiter='no way u can delim')
-            i = 0
-            data = np.row_stack(data)
-            del_list = []
 
-            while i < data.shape[0]:
-                if data[i, 0][0] != '6' and data[i, 0][0] != '9' and data[i, 0][0] != '0' and data[i, 0][0] != '3':
-                    del_list.append(i)
-                # get the row index of cash component
-                if data[i, 0][0:22] == 'EstimateCashComponent=':
-                    cpindex = i
-                if data[i, 0][0:23] == 'CreationRedemptionUnit=':
-                    ttshareindex = i
-                i += 1
+        data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + etfNumber[0:6] + date + '.txt', dtype=str,
+                             delimiter='no way u can delim')
+        i = 0
+        data = np.row_stack(data)
+        del_list = []
 
-            cp = float(str(data[cpindex, 0]).replace('EstimateCashComponent=', ''))
-            ttshare = float(str(data[ttshareindex, 0]).replace('CreationRedemptionUnit=', ''))
-            # get the array of 300etf before formatting, which contains only 1 row with all the information inside.
-            data = np.delete(data, del_list, axis=0)
+        while i < data.shape[0]:
+            data[i,0] = str(data[i,0]).strip()
+            if data[i, 0][0] != '6' and data[i, 0][0] != '9' and data[i, 0][0] != '0' and data[i, 0][0] != '3':
+                del_list.append(i)
+            # get the row index of cash component
+            if data[i,0][0:7] == '预估现金差额：':
+                cpindex = i
+            if data[i, 0][0:10] == '最小申购、赎回单位：':
+                ttshareindex = i
+            i += 1
 
-            # get the array of trade list by loops
-            index = 1
-            dtarr = np.array([data[0, :][0].split('|')])
-            while index < data.shape[0]:
-                lst = data[index, :]
-                lst = np.array([lst[0].split('|')])
-                dtarr = np.concatenate((dtarr, lst))
-                index += 1
+        cp = str(data[cpindex, 0]).replace('预估现金差额：', '')
+        cp = cp.replace("元","")
+        cp = float(cp.strip())
+        ttshare = str(data[ttshareindex, 0]).replace('最小申购、赎回单位：', '')
+        ttshare = ttshare.replace("份", "")
+        ttshare = float(ttshare.strip())
+        # get the array of 300etf before formatting, which contains only 1 row with all the information inside.
+        data = np.delete(data, del_list, axis=0)
 
-            # format the stock number with .SZ or .SH at the end
-            i2 = 0
-            while i2 < data.shape[0]:
-                if dtarr[i2, 0][0] == '6' or dtarr[i2, 0][0] == '9':
+        # get the array of trade list by loops
+        index = 1
+        lst1 = data[0, :][0].split(' ')
+        lst1 = list(filter(None,lst1))
+        dtarr = np.array([lst1])
+        while index < data.shape[0]:
+            lst = data[index, :][0].split(' ')
+            lst = list(filter(None,lst))
+            lst = np.array([lst])
+            dtarr = np.concatenate((dtarr, lst))
+            index += 1
 
-                    dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SH"
-                elif dtarr[i2, 0][0] == '3' or dtarr[i2, 0][0] == '0':
-                    dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SZ"
-                i2 += 1
-            self.tradelist = dtarr
-            self.cash_component = cp
-            self.ttshare = ttshare
-        else:
-            data = np.genfromtxt('.\\tradelist\\' + etfNumber[0:6] + '\\' + 'fm001etfd' + date + '001.txt', dtype=str,
-                                 delimiter='no way u can delim')
+        # format the stock number with .SZ or .SH at the end
+        i2 = 0
+        while i2 < data.shape[0]:
+            if dtarr[i2, 0][0] == '6' or dtarr[i2, 0][0] == '9':
 
-            i = 0
-            data = np.row_stack(data)
-            del_list = []
-
-            cp = float(str(data[1]).split('|')[18])
-            ttshare = float(str(data[1]).split('|')[11])
-
-            while i < data.shape[0]:
-                if data[i, 0][1] != ' ':
-                    del_list.append(i)
-
-                i += 1
-
-                # get the array of 300etf before formatting, which contains only 1 row with all the information inside.
-            data = np.delete(data, del_list, axis=0)
-
-            # get the array of trade list by loops
-            index = 1
-            dtarr = np.array([data[0, :][0].split('|')])
-            while index < data.shape[0]:
-                lst = data[index, :]
-                lst = np.array([lst[0].split('|')])
-                dtarr = np.concatenate((dtarr, lst))
-                index += 1
-            dtarr = dtarr[:, 2:]
-
-            # format the stock number with .SZ or .SH at the end
-            i2 = 0
-            while i2 < data.shape[0]:
-                if dtarr[i2, 0][0] == '6' or dtarr[i2, 0][0] == '9':
-
-                    dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SH"
-                elif dtarr[i2, 0][0] == '3' or dtarr[i2, 0][0] == '0':
-                    dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SZ"
-                i2 += 1
-            self.tradelist = dtarr
-            self.cash_component = cp
-            self.ttshare = ttshare
-
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SH"
+            elif dtarr[i2, 0][0] == '3' or dtarr[i2, 0][0] == '0':
+                dtarr[i2, 0] = dtarr[i2, 0].strip() + ".SZ"
+            i2 += 1
+        self.tradelist = dtarr
+        self.cash_component = cp
+        self.ttshare = ttshare
 
 
 
@@ -291,15 +256,15 @@ class DT:
         stockcost = np.concatenate((np.row_stack(stockcost),np.row_stack(stockcost),np.row_stack(stockcost)),axis = 1)
         stockcost[:,1] = 0
         stockcost[:,2] = 1
-        if float(tradelist[3].strip()) == 2 or float(tradelist[ 3].strip()) == 4:
+        if tradelist[3] == '必须' :
             if tradelist[ 5].strip() =='':
-                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[6].strip())
+                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[6].strip().replace(',',''))
             else:
-                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[5].strip())
+                stockcost[:, 1] = stockcost[:, 1].astype(np.float) + float(tradelist[5].strip().replace(',',''))
 
         else:
             stktaq = stkarr
-            quant = float((tradelist[2].strip()))
+            quant = float((tradelist[2].strip()).replace(',',''))
 
             # -4 current amt -3 total amt -2 stock cost -1 can trade or not
             stktaq = np.concatenate((stktaq, np.zeros((stktaq.shape[0], 4))), axis=1)
@@ -332,15 +297,15 @@ class DT:
         stockrev = np.concatenate((np.row_stack(stockrev), np.row_stack(stockrev), np.row_stack(stockrev)), axis=1)
         stockrev[:, 1] = 0
         stockrev[:, 2] = 1
-        if float(tradelist[3].strip()) == 2 or float(tradelist[3].strip()) == 4:
+        if tradelist[3] == '必须':
             if tradelist[5].strip() =='':
-                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[6].strip())
+                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[6].strip().replace(',',''))
             else:
-                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip())
+                stockrev[:, 1] = stockrev[:, 1].astype(np.float) + float(tradelist[5].strip().replace(',',''))
 
 
         else:
-            quant = float(tradelist[2].strip())
+            quant = float(tradelist[2].strip().replace(',',''))
             stocktaq = stkarr
 
             # return on the row at trade time
@@ -384,7 +349,7 @@ if __name__ == '__main__':
         print(i)
         dTypes = ['TAQ']
         i = i.replace("-", "")
-        a = DT('510050.SH', i)
+        a = DT('159952.SZ', i)
         a.get_trade_list()
         a.get_etf_TAQ_array()
         a.get_premium_etf()
@@ -479,7 +444,7 @@ if __name__ == '__main__':
             rtarr_df = rtarr_df.rename(
                 columns={0: 'timetick', 1: 'prETF', 2: 'dcETF', 3: 'prIOPV', 4: 'dcIOPV', 5: 'prrate', 6: 'dcrate',
                          7: 'rate', 8: 'dummy'})
-            rtarr_df.to_csv('.\etfresult\\510050\\' +i+ '.csv', index=False)
+            rtarr_df.to_csv('.\etfresult\\159952\\' +i+ '.csv', index=False)
 
 
 
@@ -487,7 +452,7 @@ if __name__ == '__main__':
     data = data.transpose()
     datadf = pd.DataFrame(data)
     datadf = datadf.rename(columns ={0 : 'date', 1:'first rate', 2:'timetick', 3:'daymax',4:'daymean',5:'daysignal'})
-    datadf.to_csv(r'.\etfresult\510050.csv', index = False)
+    datadf.to_csv(r'.\etfresult\159952.csv', index = False)
 
 
             # pr_iopv = pool.starmap(a.get_premium_IOPV, [(td, stk) for td in tradelist for stk in stklist])

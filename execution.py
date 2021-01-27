@@ -2,6 +2,7 @@ import urllib
 import urllib.request
 import urllib
 import time
+import random
 from higgsboom.FuncUtils.DateTime import *
 
 
@@ -19,16 +20,18 @@ def storageToLocalFiles(storagePath, data):
     fhandle.write(data)
     fhandle.close()
 
-tdPeriodList = TradingDays(startDate='20200312', endDate='20201231')
+tdPeriodList = TradingDays(startDate='20201231', endDate='20201231')
 
 for i in tdPeriodList:
     print(i)
     i = i.replace('-','')
-    url = "http://query2.efunds.com.cn/data/ETFEFundBulletin"+i+"_510310.txt"
+    rd = random.random()
+    rd = str(rd)
+    url = "http://reportdocs.static.szse.cn/files/text/etf/ETF159901"+i+".txt?random="+rd
     print(url)
     data = read_pageHtml(url)
-    storagePath = ".\\tradelist\\510310\\"+'510310'+i+".txt"
+    storagePath = ".\\tradelist\\159901\\"+'159901'+i+".txt"
     storageToLocalFiles(storagePath, data)
-    time.sleep(3)
+    time.sleep(2)
 
 
