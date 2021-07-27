@@ -20,16 +20,17 @@ def storageToLocalFiles(storagePath, data):
     fhandle.close()
 
 tdPeriodList = TradingDays(startDate='20200101', endDate='20201231')
+etfname = 159901
 
 for i in tdPeriodList:
     print(i)
     i = i.replace('-','')
     rd = random.random()
     rd = str(rd)
-    url = "http://reportdocs.static.szse.cn/files/text/etf/ETF159901"+i+".txt?random="+rd
+    url = "http://reportdocs.static.szse.cn/files/text/etf/ETF"+str(etfname)+i+".txt?random="+rd
     print(url)
     data = read_pageHtml(url)
-    storagePath = ".\\tradelist\\159901\\"+'159901'+i+".txt"
+    storagePath = ".\\+str(etfname)+\\+str(etfname)+\\"+str(etfname)+i+".txt"
     storageToLocalFiles(storagePath, data)
     time.sleep(1)
 
